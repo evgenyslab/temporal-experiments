@@ -1,0 +1,32 @@
+# k8s/04-cv-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cv-worker
+  namespace: temporal-demo
+spec:
+  replicas: 2  # KEDA will scale this
+  selector:
+    matchLabels:
+      app: cv-worker
+      worker-type: cv
+  template:
+    metadata:
+      labels:
+        app: cv-worker
+        worker-type: cv
+    spec:
+      containers:
+      - name: cv-worker
+        image: temporal-cv-worker:latest
+        imagePullPolicy: Never
+        env:
+        - name: TEMPORAL_ADDRESS
+          value: "temporal-frontend:7233"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"

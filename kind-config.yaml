@@ -1,0 +1,18 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: temporal-demo
+nodes:
+- role: control-plane
+  extraPortMappings:
+  # Temporal UI
+  - containerPort: 8233
+    hostPort: 8233
+    protocol: TCP
+  # Temporal gRPC
+  - containerPort: 7233
+    hostPort: 7233
+    protocol: TCP
+  # Metrics exporter
+  - containerPort: 8080
+    hostPort: 8080
+    protocol: TCP

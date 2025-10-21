@@ -1,0 +1,32 @@
+# k8s/03-api-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-worker
+  namespace: temporal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-worker
+      worker-type: api
+  template:
+    metadata:
+      labels:
+        app: api-worker
+        worker-type: api
+    spec:
+      containers:
+      - name: api-worker
+        image: temporal-api-worker:latest
+        imagePullPolicy: Never
+        env:
+        - name: TEMPORAL_ADDRESS
+          value: "temporal-frontend:7233"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

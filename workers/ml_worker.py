@@ -1,0 +1,26 @@
+import asyncio
+import os
+from temporalio.client import Client
+from temporalio.worker import Worker
+from activities.ml_activities import analyze_cv_results
+
+
+async def main():
+    temporal_address = os.getenv("TEMPORAL_ADDRESS", "localhost:7233")
+    print(f"Connecting to Temporal at {temporal_address}")
+    
+    client = await Client.connect(temporal_address)
+    
+    worker = Worker(
+        client,
+        task_queue="ml-workers",
+        workflows=[],
+        activities=[analyze_cv_results],
+    )
+    
+    print("ML worker started, listening on 'ml-workers' queue")
+    await worker.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-frontend
+  namespace: temporal-demo
+spec:
+  type: ClusterIP
+  ports:
+  - name: grpc
+    port: 7233
+    targetPort: 7233
+  - name: ui
+    port: 8233
+    targetPort: 8233
+  selector:
+    app: temporal
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal
+  namespace: temporal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal
+  template:
+    metadata:
+      labels:
+        app: temporal
+    spec:
+      containers:
+      - name: temporal
+        image: temporalio/auto-setup:latest
+        ports:
+        - containerPort: 7233
+          name: grpc
+        - containerPort: 8233
+          name: ui
+        env:
+        - name: DB
+          value: "sqlite"
+        - name: SKIP_SCHEMA_SETUP
+          value: "false"
+        - name: SKIP_DEFAULT_NAMESPACE_CREATION
+          value: "false"
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"

@@ -1,0 +1,32 @@
+# k8s/02-workflow-worker.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-worker
+  namespace: temporal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workflow-worker
+      worker-type: workflow
+  template:
+    metadata:
+      labels:
+        app: workflow-worker
+        worker-type: workflow
+    spec:
+      containers:
+      - name: workflow-worker
+        image: temporal-workflow-worker:latest
+        imagePullPolicy: Never
+        env:
+        - name: TEMPORAL_ADDRESS
+          value: "temporal-frontend:7233"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

@@ -1,0 +1,16 @@
+FROM python:3.11
+
+WORKDIR /app
+
+# Install CV dependencies (simulated - add real ones in production)
+RUN pip install --no-cache-dir temporalio
+
+# In production, you'd add:
+# RUN pip install opencv-python torch torchvision pillow
+
+# Copy application code
+COPY activities/cv_activities.py ./activities/
+COPY activities/__init__.py ./activities/
+COPY workers/cv_worker.py ./
+
+CMD ["python", "cv_worker.py"]

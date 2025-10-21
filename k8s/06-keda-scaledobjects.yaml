@@ -1,0 +1,64 @@
+# k8s/06-keda-scaledobjects.yaml
+---
+# KEDA ScaledObject for CV Workers using Temporal's official scaler
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: cv-worker-scaler
+  namespace: temporal-demo
+spec:
+  scaleTargetRef:
+    name: cv-worker
+  minReplicaCount: 2
+  maxReplicaCount: 20
+  pollingInterval: 15
+  cooldownPeriod: 60
+  triggers:
+  - type: temporal-cloud
+    metadata:
+      # Temporal server connection
+      hostAddress: temporal-frontend.temporal-demo.svc.cluster.local:7233
+      
+      # Queue to monitor
+      taskQueue: cv-workers
+      
+      # Namespace (default for self-hosted)
+      namespace: default
+      
+      # Target backlog per worker
+      targetBacklogPerWorker: "5"
+      
+      # No TLS for local development
+      enableTLS: "false"
+
+---
+# KEDA ScaledObject for ML Workers using Temporal's official scaler
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ml-worker-scaler
+  namespace: temporal-demo
+spec:
+  scaleTargetRef:
+    name: ml-worker
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  pollingInterval: 15
+  cooldownPeriod: 60
+  triggers:
+  - type: temporal-cloud
+    metadata:
+      # Temporal server connection
+      hostAddress: temporal-frontend.temporal-demo.svc.cluster.local:7233
+      
+      # Queue to monitor
+      taskQueue: ml-workers
+      
+      # Namespace
+      namespace: default
+      
+      # Target backlog per worker
+      targetBacklogPerWorker: "3"
+      
+      # No TLS for local development
+      enableTLS: "false"

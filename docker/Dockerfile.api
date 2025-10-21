@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir temporalio
+
+# Copy application code
+COPY activities/api_activities.py ./activities/
+COPY activities/storage_activities.py ./activities/
+COPY activities/__init__.py ./activities/
+COPY workers/api_worker.py ./
+
+CMD ["python", "api_worker.py"]
