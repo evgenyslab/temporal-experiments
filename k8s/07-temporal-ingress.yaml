@@ -1,0 +1,22 @@
+---
+# Ingress for Temporal UI
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: temporal-ui-ingress
+  namespace: temporal-demo
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: temporal.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: temporal-ui
+            port:
+              number: 8080

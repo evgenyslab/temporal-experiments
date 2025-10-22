@@ -15,9 +15,10 @@ help:
 	@echo "  make cluster-delete    - Delete Kind cluster"
 	@echo ""
 	@echo "Installation:"
-	@echo "  make install-deps      - Install Temporal + KEDA"
+	@echo "  make install-deps      - Install Temporal + KEDA + Ingress"
 	@echo "  make install-temporal  - Install Temporal"
 	@echo "  make install-keda      - Install KEDA"
+	@echo "  make install-ingress   - Install NGINX Ingress Controller"
 	@echo ""
 	@echo "Development:"
 	@echo "  make docker-build      - Build all Docker images"
@@ -47,21 +48,37 @@ cluster-delete:
 cluster-status:
 	kubectl cluster-info --context kind-$(CLUSTER_NAME)
 
-install-deps: install-temporal install-keda
+install-deps: install-temporal install-keda install-ingress
 
 install-temporal:
 	@echo "Installing Temporal..."
 	kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f k8s/00-namespace.yaml
 	kubectl apply -f k8s/01-temporal.yaml
+	@echo "Waiting for Postgres to be ready..."
+	@bash -c 'until kubectl get pod -l app=postgres -n $(NAMESPACE) 2>/dev/null | grep -q postgres; do sleep 1; done'
+	kubectl wait --for=condition=ready pod -l app=postgres -n $(NAMESPACE) --timeout=300s
 	@echo "Waiting for Temporal to be ready..."
+	@bash -c 'until kubectl get pod -l app=temporal -n $(NAMESPACE) 2>/dev/null | grep -q temporal; do sleep 1; done'
 	kubectl wait --for=condition=ready pod -l app=temporal -n $(NAMESPACE) --timeout=300s
+	@echo "Waiting for Temporal UI to be ready..."
+	@bash -c 'until kubectl get pod -l app=temporal-ui -n $(NAMESPACE) 2>/dev/null | grep -q temporal-ui; do sleep 1; done'
+	kubectl wait --for=condition=ready pod -l app=temporal-ui -n $(NAMESPACE) --timeout=300s
 
 install-keda:
 	@echo "Installing KEDA..."
 	kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.18.0/keda-2.18.0.yaml
 	@echo "Waiting for KEDA to be ready..."
 	kubectl wait --for=condition=ready pod -l app=keda-operator -n keda --timeout=120s
+
+install-ingress:
+	@echo "Installing NGINX Ingress Controller..."
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+	@echo "Waiting for Ingress Controller to be ready..."
+	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+	@echo "Patching Ingress Controller to use NodePort 30080 and 30443..."
+	kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{"spec":{"type":"NodePort","ports":[{"name":"http","port":80,"protocol":"TCP","targetPort":"http","nodePort":30080},{"name":"https","port":443,"protocol":"TCP","targetPort":"https","nodePort":30443}]}}'
+	@echo "Ingress Controller ready!"
 
 docker-build:
 	@echo "Building Docker images..."
@@ -86,6 +103,7 @@ deploy:
 	kubectl apply -f k8s/04-cv-worker.yaml
 	kubectl apply -f k8s/05-ml-worker.yaml
 	kubectl apply -f k8s/06-keda-scaledobjects.yaml
+	kubectl apply -f k8s/07-temporal-ingress.yaml
 	@echo "Deployment complete!"
 
 redeploy: docker-build docker-load
@@ -116,8 +134,12 @@ keda-logs:
 	kubectl logs -f -n keda -l app=keda-operator --tail=50
 
 temporal-ui:
-	@echo "Opening Temporal UI at http://localhost:8080"
-	kubectl port-forward -n $(NAMESPACE) svc/temporal-ui 8080:8080 &
+	@echo "Temporal UI is available at http://temporal.local"
+	@echo "(Make sure 'temporal.local' is added to your /etc/hosts file)"
+	@echo ""
+	@echo "To add it, run: sudo sh -c 'echo \"127.0.0.1 temporal.local\" >> /etc/hosts'"
+	@echo ""
+	@echo "If you prefer port-forwarding, run: kubectl port-forward -n $(NAMESPACE) svc/temporal-ui 8080:8080"
 
 trigger-workflow:
 	@echo "Triggering workflow for dataset $(DATASET_ID)..."
