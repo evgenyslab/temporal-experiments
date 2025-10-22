@@ -4,7 +4,7 @@ import random
 
 
 @activity.defn
-async def analyze_cv_results(cv_result: dict, dataset_info: dict) -> dict:
+async def analyze_cv_results(cv_result: dict, dataset_info: dict) -> None:
     """Simulate ML analysis on CV results"""
     activity.logger.info(f"Analyzing CV results for file: {cv_result['file']}")
     
@@ -25,4 +25,4 @@ async def analyze_cv_results(cv_result: dict, dataset_info: dict) -> dict:
     }
     
     activity.logger.info(f"Completed analysis for {cv_result['file']} in {inference_time:.2f}s")
-    return result
+    return None

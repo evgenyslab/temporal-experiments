@@ -5,7 +5,7 @@ metadata:
   name: cv-worker
   namespace: temporal-demo
 spec:
-  replicas: 2  # KEDA will scale this
+  replicas: 1  # KEDA will scale this
   selector:
     matchLabels:
       app: cv-worker

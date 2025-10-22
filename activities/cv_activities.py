@@ -1,12 +1,23 @@
 from temporalio import activity
 import asyncio
 import random
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 @activity.defn
-async def process_file(file_path: str, dataset_info: dict) -> dict:
+async def process_file(file_path: str, dataset_info: dict) -> None:
     """Simulate computer vision processing on a file"""
     activity.logger.info(f"Processing file: {file_path}")
+    logger.info(f"Processing file: {file_path}")
     
     # Simulate heavy CV processing (10-30 seconds)
     processing_time = random.uniform(45, 60)
@@ -23,4 +34,4 @@ async def process_file(file_path: str, dataset_info: dict) -> dict:
     }
     
     activity.logger.info(f"Completed processing {file_path} in {processing_time:.2f}s")
-    return result
+    return None

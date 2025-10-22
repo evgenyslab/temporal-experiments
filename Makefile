@@ -3,6 +3,9 @@
 CLUSTER_NAME := temporal-demo
 NAMESPACE := temporal-demo
 DATASET_ID ?= 123
+COUNT ?= 10
+START_ID ?= 1
+WORKFLOW_COUNT_ARG ?=
 
 help:
 	@echo "Temporal + KEDA Demo - Available Commands"
@@ -29,7 +32,8 @@ help:
 	@echo "  make temporal-ui       - Open Temporal UI"
 	@echo ""
 	@echo "Testing:"
-	@echo "  make trigger-workflow  - Trigger workflow"
+	@echo "  make trigger-workflow  - Trigger single workflow"
+	@echo "  make trigger-n         - Trigger N workflows (COUNT=10 START_ID=1 WORKFLOW_COUNT_ARG=)"
 
 cluster-create:
 	@echo "Creating Kind cluster..."
@@ -131,6 +135,23 @@ trigger-load:
 	done
 	@wait
 	@echo "All workflows triggered!"
+
+trigger-n:
+	@echo "Triggering $(COUNT) workflows starting from ID $(START_ID)..."
+	@if [ -n "$(WORKFLOW_COUNT_ARG)" ]; then \
+		echo "Each workflow will receive count argument: $(WORKFLOW_COUNT_ARG)"; \
+		kubectl run trigger-n-$(COUNT)-$(START_ID) --rm -i --restart=Never \
+			--image=temporal-workflow-worker:latest \
+			-n $(NAMESPACE) \
+			--image-pull-policy=Never \
+			-- python scripts/trigger_n_workflows.py $(COUNT) $(START_ID) $(WORKFLOW_COUNT_ARG); \
+	else \
+		kubectl run trigger-n-$(COUNT)-$(START_ID) --rm -i --restart=Never \
+			--image=temporal-workflow-worker:latest \
+			-n $(NAMESPACE) \
+			--image-pull-policy=Never \
+			-- python scripts/trigger_n_workflows.py $(COUNT) $(START_ID); \
+	fi
 
 clean:
 	kubectl delete -f k8s/ --ignore-not-found=true

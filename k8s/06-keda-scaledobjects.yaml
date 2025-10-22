@@ -9,8 +9,8 @@ metadata:
 spec:
   scaleTargetRef:
     name: cv-worker
-  minReplicaCount: 2
-  maxReplicaCount: 20
+  minReplicaCount: 1
+  maxReplicaCount: 5
   pollingInterval: 15
   cooldownPeriod: 60
   triggers:
@@ -42,7 +42,7 @@ spec:
   scaleTargetRef:
     name: ml-worker
   minReplicaCount: 1
-  maxReplicaCount: 10
+  maxReplicaCount: 5
   pollingInterval: 15
   cooldownPeriod: 60
   triggers:
