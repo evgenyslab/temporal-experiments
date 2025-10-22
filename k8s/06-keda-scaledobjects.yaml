@@ -14,10 +14,10 @@ spec:
   pollingInterval: 15
   cooldownPeriod: 60
   triggers:
-  - type: temporal-cloud
+  - type: temporal
     metadata:
       # Temporal server connection
-      hostAddress: temporal-frontend.temporal-demo.svc.cluster.local:7233
+      endpoint: temporal-frontend.temporal-demo.svc.cluster.local:7233
       
       # Queue to monitor
       taskQueue: cv-workers
@@ -46,10 +46,10 @@ spec:
   pollingInterval: 15
   cooldownPeriod: 60
   triggers:
-  - type: temporal-cloud
+  - type: temporal
     metadata:
       # Temporal server connection
-      hostAddress: temporal-frontend.temporal-demo.svc.cluster.local:7233
+      endpoint: temporal-frontend.temporal-demo.svc.cluster.local:7233
       
       # Queue to monitor
       taskQueue: ml-workers

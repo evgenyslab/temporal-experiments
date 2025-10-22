@@ -1,4 +1,70 @@
 ---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: temporal-demo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: postgres
+
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: temporal-demo
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "temporal"
+        - name: POSTGRES_PASSWORD
+          value: "temporal"
+        - name: POSTGRES_DB
+          value: "temporal"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+# Temporal Frontend Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -10,13 +76,27 @@ spec:
   - name: grpc
     port: 7233
     targetPort: 7233
-  - name: ui
-    port: 8233
-    targetPort: 8233
   selector:
     app: temporal
 
 ---
+# Temporal UI Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-ui
+  namespace: temporal-demo
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: temporal-ui
+
+---
+# Temporal Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -42,11 +122,25 @@ spec:
           name: ui
         env:
         - name: DB
-          value: "sqlite"
+          value: "postgres12"
+        - name: DB_PORT
+          value: "5432"
+        - name: POSTGRES_SEEDS
+          value: "postgres.temporal-demo.svc.cluster.local"
+        - name: POSTGRES_USER
+          value: "temporal"
+        - name: POSTGRES_PWD
+          value: "temporal"
+        - name: DBNAME
+          value: "temporal"
+        - name: VISIBILITY_DBNAME
+          value: "temporal_visibility"
         - name: SKIP_SCHEMA_SETUP
           value: "false"
         - name: SKIP_DEFAULT_NAMESPACE_CREATION
           value: "false"
+        - name: BIND_ON_IP
+          value: "0.0.0.0"
         resources:
           requests:
             cpu: "200m"
@@ -54,3 +148,47 @@ spec:
           limits:
             cpu: "1000m"
             memory: "1Gi"
+
+---
+# Temporal UI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-ui
+  namespace: temporal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: temporal-ui
+  template:
+    metadata:
+      labels:
+        app: temporal-ui
+    spec:
+      containers:
+      - name: temporal-ui
+        image: temporalio/ui:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: TEMPORAL_ADDRESS
+          value: "temporal-frontend.temporal-demo.svc.cluster.local:7233"
+        - name: TEMPORAL_UI_PORT
+          value: "8080"
+        - name: TEMPORAL_AUTH_ENABLED
+          value: "false"
+        - name: TEMPORAL_TLS_ENABLE_HOST_VERIFICATION
+          value: "false"
+        - name: TEMPORAL_CSRF_COOKIE_INSECURE
+          value: "true"
+        - name: TEMPORAL_CORS_ORIGINS
+          value: "http://localhost:8080"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"

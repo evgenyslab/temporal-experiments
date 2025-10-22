@@ -88,6 +88,20 @@ kubectl get scaledobject -n temporal-demo
 kubectl port-forward -n temporal-demo svc/temporal-frontend 7233:7233
 ```
 
+### CSRF token errors in Temporal UI (Safari)
+If you see "missing csrf token in request header" errors when trying to cancel/terminate workflows in Safari:
+
+**Solution**: The configuration has been updated to allow insecure CSRF cookies for local development. If you still see errors:
+
+1. **Clear Safari cookies**: Safari → Settings → Privacy → Manage Website Data → Remove All
+2. **Disable "Prevent Cross-Site Tracking"**: Safari → Settings → Privacy → Uncheck "Prevent cross-site tracking"
+3. **Try a different browser**: Chrome or Firefox typically work without issues
+4. **Hard refresh**: Cmd+Shift+R to clear cached resources
+
+The issue is caused by Safari's strict third-party cookie blocking. The updated config includes:
+- `TEMPORAL_CSRF_COOKIE_INSECURE: "true"` - Allows cookies over HTTP for local dev
+- `TEMPORAL_CORS_ORIGINS: "http://localhost:8080"` - Configures CORS properly
+
 ## Next Steps
 
 1. **Modify scaling thresholds** in `k8s/06-keda-scaledobjects.yaml`

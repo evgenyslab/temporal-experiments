@@ -12,7 +12,7 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class DatasetProcessingWorkflow:
     @workflow.run
-    async def run(self, dataset_id: int):
+    async def run(self, dataset_id: int) -> dict:
         workflow.logger.info(f"Starting workflow for dataset {dataset_id}")
         
         # Task 1: Get dataset metadata from API

@@ -41,9 +41,9 @@ spec:
   minReplicaCount: 2
   maxReplicaCount: 20
   triggers:
-  - type: temporal-cloud  # Temporal's official scaler
+  - type: temporal  # Temporal's official scaler
     metadata:
-      hostAddress: temporal-frontend:7233
+      endpoint: temporal-frontend:7233
       taskQueue: cv-workers
       namespace: default
       targetBacklogPerWorker: "5"
@@ -54,7 +54,7 @@ spec:
 
 | Field | Description | Example |
 |-------|-------------|---------|
-| `hostAddress` | Temporal server gRPC endpoint | `temporal-frontend:7233` |
+| `endpoint` | Temporal server gRPC endpoint | `temporal-frontend:7233` |
 | `taskQueue` | Queue name to monitor | `cv-workers` |
 | `namespace` | Temporal namespace | `default` |
 | `targetBacklogPerWorker` | Desired tasks per worker | `"5"` |
@@ -76,9 +76,9 @@ desired_workers = ceil(current_backlog / targetBacklogPerWorker)
 
 ```yaml
 triggers:
-- type: temporal-cloud
+- type: temporal
   metadata:
-    hostAddress: my-namespace.a2b3c.tmprl.cloud:7233
+    endpoint: my-namespace.a2b3c.tmprl.cloud:7233
     namespace: my-namespace.a2b3c
     taskQueue: cv-workers
     targetBacklogPerWorker: "5"
@@ -141,8 +141,13 @@ kubectl get events -n temporal-demo | grep Error
 
 ### Common Issues
 
+**Issue: "no scaler found for type: temporal-cloud"**
+- The scaler type should be `temporal`, not `temporal-cloud`
+- Change `type: temporal-cloud` to `type: temporal`
+- Also change `hostAddress` to `endpoint`
+
 **Issue: "connection refused"**
-- Check `hostAddress` is correct
+- Check `endpoint` is correct
 - Verify Temporal service is running
 - Check network policies
 

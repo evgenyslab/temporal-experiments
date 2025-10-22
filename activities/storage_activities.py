@@ -11,7 +11,7 @@ async def list_dataset_files(bucket: str, prefix: str) -> list[str]:
     await asyncio.sleep(0.5)
     
     # Mock file list - return 20 files to trigger scaling
-    file_count = 20
+    file_count = 1000
     files = [f"{prefix}image_{i:04d}.jpg" for i in range(file_count)]
     
     activity.logger.info(f"Found {len(files)} files")

@@ -1,0 +1,66 @@
+[project]
+name = "temporal-keda-demo"
+version = "0.0.1"
+description = "A demo for Temporal and KEDA"
+authors = [
+    { name = "ev", email = "evgenyslab@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.12,<4"
+
+dependencies = [
+    # Core dependencies (from base package)
+    "requests>=2.32.3",
+    "python-json-logger>=3.3.0",
+    "lz4>=4.4.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.11.2",
+    "mypy>=1.16.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "isort>=6.0.1",
+    "ipython>=9.0.2",
+    "ipdb>=0.13.13",
+    "pdbpp>=0.11.6",
+    "freezegun>=1.5.3",
+    "types-requests>=2.32.3",
+    "types-pyyaml>=6.0.12.20250516",
+]
+
+[tool.setuptools.package-data]
+modelzoo = ["py.typed"]
+
+[tool.black]
+line-length = 120
+extend-exclude = "(/\\.|^\\.).*|build/|.*\\.ipynb"
+
+[tool.isort]
+profile = "black"
+extend_skip = ["__init__.py"]
+skip_glob = [".*", ".*/", "build/", "**/build/"]
+
+[tool.flake8]
+exclude = [".github", ".venv/", "*.ipynb*", ".*", ".*/", "build/", "**/build/", "*.egg-info/", "**/__pycache__/"]
+max-line-length = 120
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+exclude = [
+    "build/",
+    ".*/build/",
+    ".*\\.egg-info/.*",
+    ".*/\\.venv/.*",
+    ".*/__pycache__/.*",
+]
+cache_dir = "/tmp/mypy"
+mypy_path = "."
+namespace_packages = true
+
+[tool.pytest.ini_options]
+addopts = "-s"
+testpaths = ["tests"]

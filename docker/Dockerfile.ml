@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.12
 
 WORKDIR /app
 
@@ -13,4 +13,7 @@ COPY activities/ml_activities.py ./activities/
 COPY activities/__init__.py ./activities/
 COPY workers/ml_worker.py ./
 
-CMD ["python", "ml_worker.py"]
+# Use unbuffered Python output
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-u", "ml_worker.py"]

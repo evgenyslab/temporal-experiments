@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -9,5 +9,9 @@ RUN pip install --no-cache-dir temporalio
 COPY workflows/ ./workflows/
 COPY activities/ ./activities/
 COPY workers/workflow_worker.py ./
+COPY scripts/ ./scripts/
 
-CMD ["python", "workflow_worker.py"]
+# Use unbuffered Python output
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-u", "workflow_worker.py"]

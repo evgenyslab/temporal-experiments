@@ -55,7 +55,7 @@ install-temporal:
 
 install-keda:
 	@echo "Installing KEDA..."
-	kubectl apply -f https://github.com/kedacore/keda/releases/download/v2.12.0/keda-2.12.0.yaml
+	kubectl apply --server-side -f https://github.com/kedacore/keda/releases/download/v2.18.0/keda-2.18.0.yaml
 	@echo "Waiting for KEDA to be ready..."
 	kubectl wait --for=condition=ready pod -l app=keda-operator -n keda --timeout=120s
 
@@ -112,15 +112,17 @@ keda-logs:
 	kubectl logs -f -n keda -l app=keda-operator --tail=50
 
 temporal-ui:
-	@echo "Opening Temporal UI at http://localhost:8233"
-	kubectl port-forward -n $(NAMESPACE) svc/temporal-frontend 8233:8233
+	@echo "Opening Temporal UI at http://localhost:8080"
+	kubectl port-forward -n $(NAMESPACE) svc/temporal-ui 8080:8080 &
 
 trigger-workflow:
 	@echo "Triggering workflow for dataset $(DATASET_ID)..."
 	kubectl run trigger-$(DATASET_ID) --rm -i --restart=Never \
 		--image=temporal-workflow-worker:latest \
 		-n $(NAMESPACE) \
-		-- python -c "import asyncio; from temporalio.client import Client; from workflows.dataset_workflow import DatasetProcessingWorkflow; asyncio.run(Client.connect('temporal-frontend:7233').execute_workflow(DatasetProcessingWorkflow.run, args=[$(DATASET_ID)], id='dataset-$(DATASET_ID)', task_queue='workflow-queue'))"
+		--image-pull-policy=Never \
+		--env="DATASET_ID=$(DATASET_ID)" \
+		-- python scripts/trigger_from_cluster.py $(DATASET_ID)
 
 trigger-load:
 	@echo "Triggering 10 workflows for load test..."

@@ -9,7 +9,7 @@ async def process_file(file_path: str, dataset_info: dict) -> dict:
     activity.logger.info(f"Processing file: {file_path}")
     
     # Simulate heavy CV processing (10-30 seconds)
-    processing_time = random.uniform(10, 30)
+    processing_time = random.uniform(45, 60)
     await asyncio.sleep(processing_time)
     
     # Mock CV results
